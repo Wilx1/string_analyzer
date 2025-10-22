@@ -327,6 +327,63 @@ def get_string(string_value):
     return Response(json_data, mimetype="application/json", status=200)
 
 
+@app.route('/strings/filter-by-natural-language', methods=['GET'])
+def filter_by_natural_language():
+    query = request.args.get('query', '').strip().lower()
+
+    if not query:
+        return jsonify({"error": "Missing query parameter"}), 400
+
+    parsed_filters = {}
+
+    # --- interpret natural language ---
+    if "single word" in query:
+        parsed_filters["word_count"] = 1
+    if "palindromic" in query or "palindrome" in query:
+        parsed_filters["is_palindrome"] = True
+    match = re.search(r'longer than (\d+)', query)
+    if match:
+        parsed_filters["min_length"] = int(match.group(1)) + 1
+    match = re.search(r'shorter than (\d+)', query)
+    if match:
+        parsed_filters["max_length"] = int(match.group(1)) - 1
+    match = re.search(r'contain(?:s|ing)?(?: the letter)? ([a-zA-Z])', query)
+    if match:
+        parsed_filters["contains_character"] = match.group(1).lower()
+
+    if not parsed_filters:
+        return jsonify({"error": "Unable to parse natural language query"}), 400
+
+    # --- reuse logic by calling your main filtering function ---
+    query_obj = StringRecord.query
+
+    if "is_palindrome" in parsed_filters:
+        query_obj = query_obj.filter(StringRecord.is_palindrome == parsed_filters["is_palindrome"])
+    if "min_length" in parsed_filters:
+        query_obj = query_obj.filter(StringRecord.length >= parsed_filters["min_length"])
+    if "max_length" in parsed_filters:
+        query_obj = query_obj.filter(StringRecord.length <= parsed_filters["max_length"])
+    if "word_count" in parsed_filters:
+        query_obj = query_obj.filter(StringRecord.word_count == parsed_filters["word_count"])
+    if "contains_character" in parsed_filters:
+        char = parsed_filters["contains_character"]
+        query_obj = query_obj.filter(
+            text(f"json_extract(character_frequency_map, '$.{char}') IS NOT NULL")
+        )
+
+    results = query_obj.all()
+    data = [record.to_dict() for record in results]
+
+    return jsonify({
+        "data": data,
+        "count": len(data),
+        "interpreted_query": {
+            "original": query,
+            "parsed_filters": parsed_filters
+        }
+    }), 200
+
+
 @app.route('/strings/<string_value>', methods=['DELETE'])
 def delete_string(string_value):
     # Try to find the string record in the database
