@@ -7,8 +7,12 @@ from sqlalchemy import text as txt
 import json
 import hashlib
 from werkzeug.exceptions import BadRequest
+import os
 
 app = Flask(__name__)
+
+PORT = int(os.environ.get("PORT", 5000))
+
 
 #db configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///data.db"
@@ -131,21 +135,6 @@ def sha256_hash(input_string):
     # Return the hash as a hexadecimal string.
     return hash_object.hexdigest()
 
-#to_dict
-# def to_dict(self):
-#     return {
-#         "id": self.id,
-#         "value": self.value,
-#         "properties": {
-#             "length": len(self.value),
-#             "is_palindrome": self.value.lower() == self.value[::-1].lower(),
-#             "unique_characters": len(set(self.value)),
-#             "word_count": len(self.value.split()),
-#             "sha256_hash": self.id,
-#             "character_frequency_map": {ch: self.value.count(ch) for ch in set(self.value)}
-#         },
-#         "created_at": self.created_at
-#     }
 
 # routes============================================================
 
@@ -406,6 +395,6 @@ def delete_string(string_value):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=PORT)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
