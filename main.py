@@ -159,7 +159,7 @@ def home():
 
 @app.route('/strings', methods=["GET", "POST"])
 def strings():
-    # check mehtod used
+    # check method used
     if request.method == 'GET':
         text_is_palindrome = request.args.get('is_palindrome')
         min_length = request.args.get('min_length', type=int)
@@ -221,7 +221,7 @@ def strings():
             if not data or "value" not in data:
                 return jsonify({
                     "error": 'Invalid request body or missing "value" field'
-                }), 400  # Bad Request
+                }), 502  # Bad Request
 
             value = data["value"]
 
@@ -234,7 +234,7 @@ def strings():
             if not isinstance(value, str):
                 return jsonify({
                     "error": 'Invalid data type for "value" (must be string)'
-                }), 422  # Unprocessable Entity
+                }), 502  # Unprocessable Entity
 
 
             input_data = json.dumps(data)
