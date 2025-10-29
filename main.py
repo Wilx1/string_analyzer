@@ -11,8 +11,6 @@ import os
 
 app = Flask(__name__)
 
-PORT = int(os.environ.get("PORT", 5000))
-
 
 #db configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///data.db"
@@ -394,7 +392,6 @@ def delete_string(string_value):
 
 
 # Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=PORT)
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host="0.0.0.0", port=port, debug=False)
